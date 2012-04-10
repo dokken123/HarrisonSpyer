@@ -22,7 +22,7 @@
 			
 			private var _netgroup:NetGroup;
 			
-			private var _fmsaddr:String = "rtmfp://cns-787.ef.com/harrisonspyer";
+			private var _fmsaddr:String = "rtmfp://p2p.rtmfp.net/91e1a66d1014024a989b4dd5-46db2568cff8/";
 			
 			private var _streamName:String = "HARRISON_SPYER";
 			
