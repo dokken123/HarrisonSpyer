@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   creationComplete="application1_creationCompleteHandler(event)">
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center" verticalAlign="top" />
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			
+			import spark.components.VideoDisplay;
+			
+			private var _camV:Video;
+			
+			private var _netconn:NetConnection;
+			
+			private var _outputStream:NetStream;
+			
+			private var _netgroup:NetGroup;
+			
+			private var _fmsaddr:String = "rtmfp://cns-787.ef.com/harrisonspyer";
+			
+			private var _streamName:String = "HARRISON_SPYER";
+			
+			private var _camera:Camera;
+			private var _mic:Microphone;
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				this._camera = Camera.getCamera();
+				if(this._camera){
+					this._camera.setQuality(0,100);
+				}
+				this._mic = Microphone.getMicrophone();
+				if(this._mic){
+					this._mic.codec = SoundCodec.SPEEX;
+					this._mic.encodeQuality = 10;
+					this._mic.setSilenceLevel(0);
+				}
+				this.camVideo.attachCamera(this._camera);
+				
+				this._netconn = new NetConnection();
+				this._netconn.connect(this._fmsaddr);
+				this._netconn.addEventListener(NetStatusEvent.NET_STATUS, this.connectHandler);	
+				this.chatbox.textArea.editable = false;
+				this.chatbox.textArea.height = 155;
+			}
+			
+			protected function connectHandler(event:NetStatusEvent):void
+			{
+				// TODO Auto-generated method stub
+				switch(event.info.code){
+					case "NetConnection.Connect.Success":
+						var groupspec:GroupSpecifier = new GroupSpecifier(this._streamName);
+						groupspec.postingEnabled = true;
+						groupspec.serverChannelEnabled = true;
+						groupspec.multicastEnabled = true;
+						this._netgroup = new NetGroup(this._netconn,groupspec.groupspecWithAuthorizations());
+						this._netgroup.addEventListener(NetStatusEvent.NET_STATUS,this.onGroupStatus);
+						this.btnSendMsg.enabled = true;
+						
+						this._outputStream = new NetStream(this._netconn);
+						this._outputStream.videoReliable = false;
+						if(this._camera != null){
+							this._outputStream.videoReliable = true;
+							this._outputStream.attachCamera(this._camera);
+						}
+						this._outputStream.attachAudio(this._mic);
+						this._outputStream.publish(this._netconn.nearID);
+						this._outputStream.addEventListener(NetStatusEvent.NET_STATUS,this.onNetstreamStatus);
+						break;
+					case "NetGroup.Connect.Success":
+//						this._netgroup.post(camMsgToNeighbors());
+						break;
+				}
+			}			
+			
+			protected function onNetstreamStatus(event:NetStatusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(event.info.code == "NetStream.Publish.BadName"){
+					mx.controls.Alert.show("Someone is already publishing the video...");
+				}
+			}
+			
+			protected function onGroupStatus(event:NetStatusEvent):void
+			{
+				// TODO Auto-generated method stub
+				var peerId:String = event.info.peerID;
+				
+				var instream:NetStream = new NetStream(this._netconn);
+				instream.receiveAudio(true);
+				
+				instream.play(peerId);
+				instream.addEventListener(NetStatusEvent.NET_STATUS,this.onInSteamStatus);
+				var peerVideo:spark.components.VideoDisplay = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
+				switch(event.info.code){
+					case "NetGroup.Neighbor.Connect":
+						if(peerVideo == null){
+							var video:Video = new Video(320,240);
+							video.attachNetStream(instream);
+							video.smoothing = true;
+							var videoDisplay:spark.components.VideoDisplay = new spark.components.VideoDisplay();
+							videoDisplay.name = "video_" + peerId;
+							videoDisplay.width = 320;
+							videoDisplay.height = 240;
+							videoDisplay.includeInLayout = false;
+							videoDisplay.visible = false;
+							videoDisplay.addChild(video);
+							this.camGroup.addElement(videoDisplay);
+						}
+						break;
+					case "NetGroup.Neighbor.Disconnect":
+
+						break;
+					case "NetGroup.Posting.Notify":
+					case "NetGroup.SendTo.Notify":
+						var msg:Object = event.info.message;
+						switch(msg.label){
+							case "msg":
+								this.addMessage(msg.user,msg.text);
+								break;
+							case "addcam":
+								break;								
+						}
+						break;
+				}
+				
+			}
+			
+			protected function onInSteamStatus(event:NetStatusEvent):void
+			{
+				// TODO Auto-generated method stub
+				var peerVideo:spark.components.VideoDisplay
+				switch(event.info.code){
+					case "NetStream.Play.Start":
+						peerVideo = this.camGroup.getChildByName("video_"+event.info.details) as spark.components.VideoDisplay;
+						var instream:NetStream = event.target as NetStream;
+						if(instream.info.videoByteCount > 0){
+							if(peerVideo != null){
+								peerVideo.includeInLayout = true;
+								peerVideo.visible = true;
+							}
+						}
+						break;
+					case "NetStream.Play.UnpublishNotify":
+						var peerId:String = String(event.info.description).substr(0,String(event.info.description).indexOf(" "));
+						peerVideo = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
+						if(peerVideo != null){
+							this.camGroup.removeElement(peerVideo);
+						}
+						break;
+				}
+			}
+			
+			protected function openMuteMic():void{
+				if(!this.chkMuteMic.selected){
+					this._outputStream.attachAudio(this._mic);	
+				}else{
+					this._outputStream.attachAudio(null);
+				}
+			}
+			
+			protected function sendMsg():void{
+				var msg:Object = new Object();
+				msg.label = "msg";
+				msg.text = this.txtMessage.text;
+				msg.user = this.txtUserName.text;
+				this._netgroup.post(msg);
+				this.addMessage(msg.user,msg.text);
+				this.txtMessage.text = "";
+			}
+						
+			private function addMessage(user:String,msg:String):void{
+				this.chatbox.htmlText += "<FONT COLOR='#FF0000'>" + user + "</FONT>:" + msg + "\n";
+				this.chatbox.textArea.validateNow();
+				this.chatbox.textArea.verticalScrollPosition = this.chatbox.textArea.maxVerticalScrollPosition;
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:HGroup width="100%" height="30%" horizontalAlign="center" verticalAlign="top">
+		<mx:VideoDisplay id="camVideo" width="320" height="240" />
+		<s:VGroup width="150" height="240" horizontalAlign="left" verticalAlign="top">
+			<s:CheckBox id="chkMuteMic" label="Mute My Microphone" change="openMuteMic()" selected="true" />
+			<s:HGroup width="100%">
+				<s:TextInput id="txtUserName" width="80" text="UserName" />
+				<s:TextInput id="txtMessage" width="150" />
+				<s:Button id="btnSendMsg" label="Send" click="sendMsg()" enabled="false" />
+			</s:HGroup>
+			<mx:RichTextEditor id="chatbox" width="360" height="180" showControlBar="false" borderStyle="none" headerHeight="0" dropShadowVisible="false" verticalScrollPolicy="off" />
+		</s:VGroup>
+	</s:HGroup>
+	<s:Scroller width="100%" height="70%">
+		<s:TileGroup id="camGroup" height="100%" width="100%" horizontalGap="5" verticalGap="5" />
+	</s:Scroller>
+</s:Application>
