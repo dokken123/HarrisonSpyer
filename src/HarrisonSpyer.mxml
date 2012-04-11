@@ -149,14 +149,15 @@
 						peerId = peerId.substring(peerId.lastIndexOf(" ")+1,peerId.length);
 						peerVideo = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
 						var instream:NetStream = event.target as NetStream;
-						setTimeout(function():void{
+						var intv:uint = setInterval(function():void{
 							if(instream.info.videoByteCount > 0){
 								if(peerVideo != null){
 									peerVideo.includeInLayout = true;
 									peerVideo.visible = true;
 								}
-							}	
-						},3000);
+								clearInterval(intv);
+							}			
+						},1000);
 						break;
 					case "NetStream.Play.UnpublishNotify":
 						peerId = String(event.info.description).substr(0,String(event.info.description).indexOf(" "));
@@ -166,6 +167,15 @@
 						}
 						break;
 				}
+			}
+			
+			private function checkAddVideo(instream:NetStream,peerVideo:spark.components.VideoDisplay):void{
+				if(instream.info.videoByteCount > 0){
+					if(peerVideo != null){
+						peerVideo.includeInLayout = true;
+						peerVideo.visible = true;
+					}
+				}	
 			}
 			
 			protected function openMuteMic():void{
