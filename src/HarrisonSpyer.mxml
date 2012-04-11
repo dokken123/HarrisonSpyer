@@ -165,15 +165,6 @@
 				}
 			}
 			
-			private function checkAddVideo(instream:NetStream,peerVideo:spark.components.VideoDisplay):void{
-				if(instream.info.videoByteCount > 0){
-					if(peerVideo != null){
-						peerVideo.includeInLayout = true;
-						peerVideo.visible = true;
-					}
-				}	
-			}
-			
 			protected function openMuteMic():void{
 				if(!this.chkMuteMic.selected){
 					this._outputStream.attachAudio(this._mic);	
