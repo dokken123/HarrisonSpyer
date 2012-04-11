@@ -116,6 +116,15 @@
 							videoDisplay.visible = false;
 							videoDisplay.addChild(video);
 							this.camGroup.addElement(videoDisplay);
+							var intv:uint = setInterval(function():void{
+								if(instream.info.videoByteCount > 0){
+									if(videoDisplay != null){
+										videoDisplay.includeInLayout = true;
+										videoDisplay.visible = true;
+									}
+									clearInterval(intv);
+								}			
+							},2000);
 						}
 						break;
 					case "NetGroup.Neighbor.Disconnect":
@@ -145,19 +154,6 @@
 				var peerVideo:spark.components.VideoDisplay
 				switch(event.info.code){
 					case "NetStream.Play.Start":
-						peerId = String(event.info.description);
-						peerId = peerId.substring(peerId.lastIndexOf(" ")+1,peerId.length);
-						peerVideo = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
-						var instream:NetStream = event.target as NetStream;
-						var intv:uint = setInterval(function():void{
-							if(instream.info.videoByteCount > 0){
-								if(peerVideo != null){
-									peerVideo.includeInLayout = true;
-									peerVideo.visible = true;
-								}
-								clearInterval(intv);
-							}			
-						},1000);
 						break;
 					case "NetStream.Play.UnpublishNotify":
 						peerId = String(event.info.description).substr(0,String(event.info.description).indexOf(" "));
