@@ -22,7 +22,7 @@
 			
 			private var _netgroup:NetGroup;
 			
-			private var _fmsaddr:String = "rtmfp://cns-787.ef.com/harrisonspyer";
+			private var _fmsaddr:String = "rtmfp://10.128.37.60/harrisonspyer";
 			
 			private var _streamName:String = "HARRISON_SPYER";
 			
@@ -34,12 +34,15 @@
 				// TODO Auto-generated method stub
 				this._camera = Camera.getCamera();
 				if(this._camera){
+					this._camera.setMode(320,240,15);
 					this._camera.setQuality(0,100);
+					
 				}
 				this._mic = Microphone.getMicrophone();
 				if(this._mic){
 					this._mic.codec = SoundCodec.SPEEX;
 					this._mic.encodeQuality = 10;
+					this._mic.rate = 22;
 					this._mic.setSilenceLevel(0);
 				}
 				this.camVideo.attachCamera(this._camera);
@@ -116,7 +119,9 @@
 						}
 						break;
 					case "NetGroup.Neighbor.Disconnect":
-
+						if(peerVideo != null){
+							this.camGroup.removeElement(peerVideo);
+						}
 						break;
 					case "NetGroup.Posting.Notify":
 					case "NetGroup.SendTo.Notify":
@@ -136,10 +141,13 @@
 			protected function onInSteamStatus(event:NetStatusEvent):void
 			{
 				// TODO Auto-generated method stub
+				var peerId:String = "";
 				var peerVideo:spark.components.VideoDisplay
 				switch(event.info.code){
 					case "NetStream.Play.Start":
-						peerVideo = this.camGroup.getChildByName("video_"+event.info.details) as spark.components.VideoDisplay;
+						peerId = String(event.info.description);
+						peerId = peerId.substring(peerId.lastIndexOf(" ")+1,peerId.length);
+						peerVideo = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
 						var instream:NetStream = event.target as NetStream;
 						setTimeout(function():void{
 							if(instream.info.videoByteCount > 0){
@@ -147,11 +155,11 @@
 									peerVideo.includeInLayout = true;
 									peerVideo.visible = true;
 								}
-							}
+							}	
 						},3000);
 						break;
 					case "NetStream.Play.UnpublishNotify":
-						var peerId:String = String(event.info.description).substr(0,String(event.info.description).indexOf(" "));
+						peerId = String(event.info.description).substr(0,String(event.info.description).indexOf(" "));
 						peerVideo = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
 						if(peerVideo != null){
 							this.camGroup.removeElement(peerVideo);
