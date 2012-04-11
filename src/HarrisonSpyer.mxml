@@ -22,7 +22,7 @@
 			
 			private var _netgroup:NetGroup;
 			
-			private var _fmsaddr:String = "rtmfp://10.128.37.60/harrisonspyer";
+			private var _fmsaddr:String = "rtmfp://qusi.org/harrisonspyer";
 			
 			private var _streamName:String = "HARRISON_SPYER";
 			
@@ -34,7 +34,7 @@
 				// TODO Auto-generated method stub
 				this._camera = Camera.getCamera();
 				if(this._camera){
-					this._camera.setMode(320,240,15);
+					this._camera.setMode(320,240,8);
 					this._camera.setQuality(0,100);
 					
 				}
