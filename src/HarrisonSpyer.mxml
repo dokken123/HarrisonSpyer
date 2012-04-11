@@ -73,7 +73,7 @@
 							this._outputStream.videoReliable = true;
 							this._outputStream.attachCamera(this._camera);
 						}
-						this._outputStream.attachAudio(this._mic);
+//						this._outputStream.attachAudio(this._mic);
 						this._outputStream.publish(this._netconn.nearID);
 						this._outputStream.addEventListener(NetStatusEvent.NET_STATUS,this.onNetstreamStatus);
 						break;
