@@ -70,7 +70,7 @@
 						this._netgroup.addEventListener(NetStatusEvent.NET_STATUS,this.onGroupStatus);
 						this.btnSendMsg.enabled = true;
 						
-						this._outputStream = new NetStream(this._netconn,groupspec.groupspecWithAuthorizations());
+						this._outputStream = new NetStream(this._netconn);
 						this._outputStream.videoReliable = false;
 						if(this._camera != null){
 							this._outputStream.videoReliable = true;
@@ -81,7 +81,7 @@
 						this._outputStream.addEventListener(NetStatusEvent.NET_STATUS,this.onNetstreamStatus);
 						break;
 					case "NetGroup.Connect.Success":
-//						this._netgroup.post(camMsgToNeighbors());
+						//						this._netgroup.post(camMsgToNeighbors());
 						break;
 				}
 			}			
@@ -99,7 +99,7 @@
 				// TODO Auto-generated method stub
 				var peerId:String = event.info.peerID;
 				
-				var instream:NetStream = new NetStream(this._netconn,groupspec.groupspecWithAuthorizations());
+				var instream:NetStream = new NetStream(this._netconn);
 				instream.receiveAudio(true);
 				
 				instream.play(peerId);
@@ -185,7 +185,7 @@
 				this.addMessage(msg.user,msg.text);
 				this.txtMessage.text = "";
 			}
-						
+			
 			private function addMessage(user:String,msg:String):void{
 				this.chatbox.htmlText += "<FONT COLOR='#FF0000'>" + user + "</FONT>:" + msg + "\n";
 				this.chatbox.textArea.validateNow();
