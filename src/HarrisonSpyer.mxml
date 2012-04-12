@@ -22,6 +22,8 @@
 			
 			private var _netgroup:NetGroup;
 			
+			private var groupspec:GroupSpecifier;
+			
 			private var _fmsaddr:String = "rtmfp://qusi.org/harrisonspyer";
 			
 			private var _streamName:String = "HARRISON_SPYER";
@@ -34,9 +36,9 @@
 				// TODO Auto-generated method stub
 				this._camera = Camera.getCamera();
 				if(this._camera){
-					this._camera.setMode(320,240,8);
-					this._camera.setQuality(0,100);
-					
+					this._camera.setMode(320,240,10);
+					this._camera.setQuality(30000,0);
+					this._camera.setKeyFrameInterval(15);
 				}
 				this._mic = Microphone.getMicrophone();
 				if(this._mic){
@@ -45,6 +47,7 @@
 					this._mic.rate = 22;
 					this._mic.setSilenceLevel(0);
 				}
+				this.camVideo.maintainAspectRatio = true;
 				this.camVideo.attachCamera(this._camera);
 				
 				this._netconn = new NetConnection();
@@ -59,7 +62,7 @@
 				// TODO Auto-generated method stub
 				switch(event.info.code){
 					case "NetConnection.Connect.Success":
-						var groupspec:GroupSpecifier = new GroupSpecifier(this._streamName);
+						groupspec = new GroupSpecifier(this._streamName);
 						groupspec.postingEnabled = true;
 						groupspec.serverChannelEnabled = true;
 						groupspec.multicastEnabled = true;
@@ -67,7 +70,7 @@
 						this._netgroup.addEventListener(NetStatusEvent.NET_STATUS,this.onGroupStatus);
 						this.btnSendMsg.enabled = true;
 						
-						this._outputStream = new NetStream(this._netconn);
+						this._outputStream = new NetStream(this._netconn,groupspec.groupspecWithAuthorizations());
 						this._outputStream.videoReliable = false;
 						if(this._camera != null){
 							this._outputStream.videoReliable = true;
@@ -96,7 +99,7 @@
 				// TODO Auto-generated method stub
 				var peerId:String = event.info.peerID;
 				
-				var instream:NetStream = new NetStream(this._netconn);
+				var instream:NetStream = new NetStream(this._netconn,groupspec.groupspecWithAuthorizations());
 				instream.receiveAudio(true);
 				
 				instream.play(peerId);
