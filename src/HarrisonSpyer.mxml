@@ -26,7 +26,9 @@
 			
 			private var groupspec:GroupSpecifier;
 			
-			private var _fmsaddr:String = "rtmfp://qusi.org/harrisonspyer";
+//			private var _fmsaddr:String = "rtmfp://qusi.org/harrisonspyer";
+			
+			private var _fmsaddr:String = "rtmfp://10.128.37.60/harrisonspyer";
 			
 			private var _streamName:String = "HARRISON_SPYER";
 			
@@ -48,7 +50,7 @@
 				if(this._mic){
 					this._mic.codec = SoundCodec.SPEEX;
 					this._mic.encodeQuality = 10;
-					this._mic.rate = 22;
+					this._mic.framesPerPacket = 1;
 					this._mic.setSilenceLevel(0);
 				}
 				this.camVideo.maintainAspectRatio = true;
@@ -75,7 +77,7 @@
 						this._netgroup = new NetGroup(this._netconn,groupspec.groupspecWithAuthorizations());
 						this._netgroup.addEventListener(NetStatusEvent.NET_STATUS,this.onGroupStatus);
 						
-						this._outputStream = new NetStream(this._netconn);
+						this._outputStream = new NetStream(this._netconn,NetStream.DIRECT_CONNECTIONS);
 						this._outputStream.audioReliable = true;
 						this._outputStream.videoReliable = false;
 						if(this._camera != null){
@@ -83,7 +85,8 @@
 							this._outputStream.attachCamera(this._camera);
 						}
 						this._outputStream.attachAudio(null);
-						this._outputStream.publish(this._netconn.nearID);
+//						this._outputStream.publish(this._netconn.nearID);
+						this._outputStream.publish(this._streamName);
 						this._outputStream.addEventListener(NetStatusEvent.NET_STATUS,this.onNetstreamStatus);
 						break;
 					case "NetGroup.Connect.Success":
@@ -107,13 +110,13 @@
 				// TODO Auto-generated method stub
 				var peerId:String = event.info.peerID;
 				
-				var instream:NetStream = new NetStream(this._netconn);
+				var instream:NetStream = new NetStream(this._netconn,peerId);
 				instream.receiveAudio(true);
 				
-				instream.play(peerId);
+				instream.play(this._streamName);
 				instream.addEventListener(NetStatusEvent.NET_STATUS,this.onInSteamStatus);
 				var peerVideo:spark.components.VideoDisplay = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
-				this.traceText(event.info.description);
+				this.traceText(event.info.peerID + " Connected as a peer");
 				switch(event.info.code){
 					case "NetGroup.Neighbor.Connect":
 						if(peerVideo == null){
@@ -124,8 +127,8 @@
 							videoDisplay.name = "video_" + peerId;
 							videoDisplay.width = 320;
 							videoDisplay.height = 240;
-							videoDisplay.includeInLayout = false;
-							videoDisplay.visible = false;
+//							videoDisplay.includeInLayout = false;
+//							videoDisplay.visible = false;
 							videoDisplay.addChild(video);
 							this.camGroup.addElement(videoDisplay);
 							var intv:uint = setInterval(function():void{
@@ -163,18 +166,11 @@
 			protected function onInSteamStatus(event:NetStatusEvent):void
 			{
 				// TODO Auto-generated method stub
-				var peerId:String = "";
-				var peerVideo:spark.components.VideoDisplay;
 				this.traceText(event.info.description);
 				switch(event.info.code){
 					case "NetStream.Play.Start":
 						break;
 					case "NetStream.Play.UnpublishNotify":
-						peerId = String(event.info.description).substr(0,String(event.info.description).indexOf(" "));
-						peerVideo = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
-						if(peerVideo != null){
-							this.camGroup.removeElement(peerVideo);
-						}
 						break;
 				}
 			}
@@ -235,9 +231,19 @@
 			protected function radAudioQuality_itemClickHandler(event:ItemClickEvent):void
 			{
 				// TODO Auto-generated method stub
-				if(this._mic != null){
-					var rate:Number = Number(event.item);
-					this._mic.rate = rate;
+				switch(event.item){
+					case "low":
+						this._mic.encodeQuality = 2;
+						this._mic.framesPerPacket = 4;
+						break;
+					case "medium":
+						this._mic.encodeQuality = 6;
+						this._mic.framesPerPacket = 2;
+						break;
+					case "high":
+						this._mic.encodeQuality = 10;
+						this._mic.framesPerPacket = 1;
+						break;
 				}
 			}
 			
@@ -308,11 +314,9 @@
 			<mx:HBox width="360" height="20" verticalAlign="middle">
 				<s:Label text="Your Microphone Quality" />
 				<s:RadioButtonGroup id="radAudioQuality" itemClick="radAudioQuality_itemClickHandler(event)" />
-				<s:RadioButton label="5" value="5" groupName="radAudioQuality" />
-				<s:RadioButton label="8" value="8" groupName="radAudioQuality" />
-				<s:RadioButton label="11" value="11" groupName="radAudioQuality" />
-				<s:RadioButton label="22" value="22" groupName="radAudioQuality" selected="true" />
-				<s:RadioButton label="44" value="44" groupName="radAudioQuality" />
+				<s:RadioButton label="Low" value="low" groupName="radAudioQuality" />
+				<s:RadioButton label="Medium" value="medium" groupName="radAudioQuality" />
+				<s:RadioButton label="High" value="high" groupName="radAudioQuality" selected="true" />
 			</mx:HBox>
 			<mx:HBox width="360" height="20" verticalAlign="middle">
 				<s:Label text="Your Camera Quality" />
