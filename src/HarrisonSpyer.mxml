@@ -26,9 +26,9 @@
 			
 			private var groupspec:GroupSpecifier;
 			
-//			private var _fmsaddr:String = "rtmfp://qusi.org/harrisonspyer";
+			private var _fmsaddr:String = "rtmfp://qusi.org/harrisonspyer";
 			
-			private var _fmsaddr:String = "rtmfp://10.128.37.60/harrisonspyer";
+//			private var _fmsaddr:String = "rtmfp://10.128.37.60/harrisonspyer";
 			
 			private var _streamName:String = "HARRISON_SPYER";
 			
@@ -108,17 +108,18 @@
 			protected function onGroupStatus(event:NetStatusEvent):void
 			{
 				// TODO Auto-generated method stub
-				var peerId:String = event.info.peerID;
 				
-				var instream:NetStream = new NetStream(this._netconn,peerId);
-				instream.receiveAudio(true);
-				
-				instream.play(this._streamName);
-				instream.addEventListener(NetStatusEvent.NET_STATUS,this.onInSteamStatus);
-				var peerVideo:spark.components.VideoDisplay = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
-				this.traceText(event.info.peerID + " Connected as a peer");
 				switch(event.info.code){
 					case "NetGroup.Neighbor.Connect":
+						var peerId:String = event.info.peerID;
+						
+						var instream:NetStream = new NetStream(this._netconn,peerId);
+						instream.receiveAudio(true);
+						
+						instream.play(this._streamName);
+						instream.addEventListener(NetStatusEvent.NET_STATUS,this.onInSteamStatus);
+						var peerVideo:spark.components.VideoDisplay = this.camGroup.getChildByName("video_"+peerId) as spark.components.VideoDisplay;
+						this.traceText(event.info.peerID + " Connected as a peer");
 						if(peerVideo == null){
 							var video:Video = new Video(320,240);
 							video.attachNetStream(instream);
@@ -146,6 +147,7 @@
 						if(peerVideo != null){
 							this.camGroup.removeElement(peerVideo);
 						}
+						this.traceText(event.info.peerID + " Disconnected");
 						break;
 					case "NetGroup.Posting.Notify":
 					case "NetGroup.SendTo.Notify":
@@ -209,8 +211,8 @@
 				}
 				var msg:Object = new Object();
 				msg.label = "msg";
-				msg.text = this.txtMessage.text;
-				msg.user = this.txtUserName.text;
+				msg.text = message;
+				msg.user = usrName;
 				this._netgroup.post(msg);
 				this.addMessage(msg.user,msg.text);
 				this.txtMessage.text = "";
