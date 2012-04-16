@@ -28,7 +28,7 @@
 			
 			private var _fmsaddr:String = "rtmfp://qusi.org/harrisonspyer";
 			
-//			private var _fmsaddr:String = "rtmfp://10.128.37.60/harrisonspyer";
+			//			private var _fmsaddr:String = "rtmfp://10.128.37.60/harrisonspyer";
 			
 			private var _streamName:String = "HARRISON_SPYER";
 			
@@ -44,7 +44,7 @@
 				if(this._camera){
 					this._camera.setMode(320,240,10);
 					this._camera.setQuality(30000,0);
-//					this._camera.setKeyFrameInterval(15);
+					//					this._camera.setKeyFrameInterval(15);
 				}
 				this._mic = Microphone.getMicrophone();
 				if(this._mic){
@@ -85,7 +85,7 @@
 							this._outputStream.attachCamera(this._camera);
 						}
 						this._outputStream.attachAudio(null);
-//						this._outputStream.publish(this._netconn.nearID);
+						//						this._outputStream.publish(this._netconn.nearID);
 						this._outputStream.publish(this._streamName);
 						this._outputStream.addEventListener(NetStatusEvent.NET_STATUS,this.onNetstreamStatus);
 						break;
@@ -128,8 +128,8 @@
 							videoDisplay.name = "video_" + peerId;
 							videoDisplay.width = 320;
 							videoDisplay.height = 240;
-//							videoDisplay.includeInLayout = false;
-//							videoDisplay.visible = false;
+							videoDisplay.includeInLayout = false;
+							videoDisplay.visible = false;
 							videoDisplay.addChild(video);
 							this.camGroup.addElement(videoDisplay);
 							var intv:uint = setInterval(function():void{
