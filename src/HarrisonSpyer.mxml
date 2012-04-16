@@ -144,8 +144,10 @@
 						}
 						break;
 					case "NetGroup.Neighbor.Disconnect":
-						if(peerVideo != null){
-							this.camGroup.removeElement(peerVideo);
+						var peerId2:String = event.info.peerID;
+						var peerVideo2:spark.components.VideoDisplay = this.camGroup.getChildByName("video_"+peerId2) as spark.components.VideoDisplay;
+						if(peerVideo2 != null){
+							this.camGroup.removeElement(peerVideo2);
 						}
 						this.traceText(event.info.peerID + " Disconnected");
 						break;
